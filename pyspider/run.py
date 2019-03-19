@@ -106,8 +106,6 @@ def cli(ctx, **kwargs):
                     db, os.environ['MYSQL_PORT_3306_TCP_ADDR'],
                     os.environ['MYSQL_PORT_3306_TCP_PORT'], db)))
         elif os.environ.get('MONGODB_NAME'):
-            print("this is message of mongodb: ")
-            print(os.environ)
             kwargs[db] = utils.Get(lambda db=db: connect_database(
                 'mongodb+%s://%s:%s/%s' % (
                     db, os.environ['MONGODB_PORT_27017_TCP_ADDR'],
@@ -450,7 +448,7 @@ def phantomjs(ctx, phantomjs_path, port, auto_restart, args):
 @click.pass_context
 def chromium(ctx, nodejs_path, port, auto_restart, args):
     """
-    Run chromium fetcher if nodejs is installed.
+    Run chromium fetcher if nodejs and puppeteer is installed.
     """
     args = args or ctx.default_map and ctx.default_map.get('args', [])
 
