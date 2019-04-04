@@ -113,12 +113,14 @@ const get = async (_fetch, browser) => {
         });
 
         // request start and load images ?
+        // some bugs in setRequestInterception: https://github.com/GoogleChrome/puppeteer/issues/3471
         page.on('request', request => {
-           if(request.resourceType() === 'image' && !_fetch.load_images){
-                request.abort();
+           if(request.resourceType() === 'image' && !_fetch.load_images) {
+                console.debug(`Abort request: [${request.method()}] ${request.url()} `)
+               //request.abort();
            } else {
                 console.debug(`Starting request: [${request.method()}] ${request.url()} `);
-                request.continue();
+                // request.continue();
            }
            end_time = null;
         });
@@ -126,7 +128,7 @@ const get = async (_fetch, browser) => {
         // print the page console messages (filter type=image if load_images=False or undefined)
         page.on('console', msg => {
             if (typeof msg === 'object' && msg.text() !== "Failed to load resource: net::ERR_FAILED") {
-                console.debug('console:' + msg.text())
+                console.log(`console: ${msg.text()}`)
             }
         });
 
@@ -176,7 +178,7 @@ const get = async (_fetch, browser) => {
             console.debug("make_result !!!");
             // to make result
             try {
-                content = content + "\n" + await page.content();
+                content =`\n${await page.content()}`;
                 const cookies = await page.cookies(_fetch.url);
                 result = {
                     orig_url: _fetch.url,
@@ -205,15 +207,20 @@ const get = async (_fetch, browser) => {
                 }
             }
             finished = true;
-            console.debug("["+result.status_code+"] "+result.orig_url+" "+result.time);
+            console.debug(`[${result.status_code}]${result.orig_url} ${result.time}`);
             resolve(result);
-            await page.close();
+            try{
+                await page.close();
+            } catch(e) {
+                console.debug('page was closed !')
+            }
+            
         };
 
         setTimeout(make_result, page_timeout + 100);
 
         try {
-            await page.setRequestInterception(true);
+            // _fetch.load_images ? await page.setRequestInterception(false): await page.setRequestInterception(true);
             await page.goto(_fetch.url);
         } catch (e) {
             result = {
@@ -228,7 +235,7 @@ const get = async (_fetch, browser) => {
                 js_script_result: null,
                 save: _fetch.save
             };
-            await page.close();
+            resolve(result);
         }
     })
 };
@@ -257,7 +264,7 @@ const post = _fetch => {
 					js_script_result: null,
 					save: _fetch.save
 				};
-				console.log("["+result.status_code+"] "+result.orig_url+" "+result.time);
+				console.log(`[${result.status_code}] ${result.orig_url} ${result.time}`);
                 resolve(result)
             }else{
 				// when request failure
@@ -274,7 +281,7 @@ const post = _fetch => {
 					js_script_result: null,
 					save: _fetch.save
 				};
-				console.log("["+result.status_code+"] "+result.orig_url+" "+result.time);
+				console.log(`[${result.status_code}] ${result.orig_url} ${result.time}`);
 				resolve(result)
 			}
         });
@@ -314,7 +321,7 @@ app.listen(port);
 
 // start server
 if (app) {
-	console.log('Chromium fetcher runing on port ' + port);
+	console.log(`Chromium fetcher runing on port: ${port}`);
 }else{
-	console.log('Error: Could not create web server listening on port ' + port);
+	console.log(`Error: Could not create web server listening on port: ${port}`);
 }

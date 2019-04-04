@@ -10,7 +10,7 @@
   "dependencies": {
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
-    "puppeteer": "^1.13.0",
+    "puppeteer": "^1.14.0",
     "request": "^2.88.0"
   },
   "devDependencies": {},
